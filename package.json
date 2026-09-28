@@ -1,6 +1,28 @@
 {
 	"name": "diffs-svelte",
-	"version": "0.0.1",
+	"version": "0.1.0",
+	"description": "Svelte 5 components for @pierre/diffs",
+	"license": "MIT",
+	"author": "Nathanael Bonfim",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/nathabonfim59/diffs-svelte.git"
+	},
+	"homepage": "https://nathabonfim59.github.io/diffs-svelte/",
+	"bugs": "https://github.com/nathabonfim59/diffs-svelte/issues",
+	"keywords": [
+		"svelte",
+		"diff",
+		"code",
+		"syntax-highlighting",
+		"shiki",
+		"pierre-diffs"
+	],
+	"type": "module",
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
+	},
 	"scripts": {
 		"dev": "vite dev",
 		"build": "svelte-kit sync && svelte-package && publint",
@@ -8,7 +30,9 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"prepublishOnly": "pnpm build",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"pack:smoke": "./scripts/pack-smoke.sh",
+		"release:check": "node scripts/validate-release.mjs"
 	},
 	"files": [
 		"dist",
@@ -20,7 +44,6 @@
 	],
 	"svelte": "./dist/index.js",
 	"types": "./dist/index.d.ts",
-	"type": "module",
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
@@ -44,19 +67,5 @@
 		"typescript": "^6.0.3",
 		"vite": "^8.0.16"
 	},
-	"keywords": [
-		"svelte",
-		"diff",
-		"code",
-		"syntax-highlighting",
-		"shiki",
-		"pierre-diffs"
-	],
-	"description": "Svelte 5 components for @pierre/diffs",
-	"packageManager": "pnpm@11.13.0",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/nathabonfim59/diffs-svelte.git"
-	},
-	"homepage": "https://nathabonfim59.github.io/diffs-svelte/"
+	"packageManager": "pnpm@11.13.0"
 }

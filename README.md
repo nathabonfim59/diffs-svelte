@@ -55,4 +55,7 @@ pnpm build:docs   # static docs site into build/
 `.github/workflows/docs.yml` deploys the docs to GitHub Pages on every push to `main`. In the
 repository settings, set Pages to deploy from GitHub Actions.
 
+Pushing a `v*.*.*` tag publishes to npm and creates a GitHub release. See
+[RELEASING.md](RELEASING.md).
+
 diffs-svelte is a community package and is not affiliated with The Pierre Computer Company.
