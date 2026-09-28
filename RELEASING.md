@@ -5,7 +5,7 @@ Pushing a `v*.*.*` tag runs `.github/workflows/release.yml`. The workflow has th
 1. `validate` checks that the tag is strict SemVer, points at the tagged commit, and matches the
    `package.json` version. It then type-checks, builds, and packs the library, and installs the
    tarball into a clean project to type-check a component that uses it.
-2. `npm` publishes that exact tarball with npm trusted publishing, so no npm token is stored in
+2. `npm` waits for a maintainer to approve the deployment in the Actions tab, then publishes that exact tarball with npm trusted publishing, so no npm token is stored in
    GitHub. npm adds a provenance statement that links the version to the workflow run. A tag with
    a prerelease part, such as `v0.2.0-rc.1`, publishes under the `next` dist-tag. Every other tag
    publishes under `latest`.
@@ -55,8 +55,7 @@ publisher with these values. They are case-sensitive.
 | Environment | `npm` |
 
 In the GitHub repository settings, create an environment named `npm`. Limit it to tags matching
-`v*.*.*`, and add yourself as a required reviewer if you want to approve each publish. The
-environment needs no secrets.
+`v*.*.*` and add yourself as a required reviewer. The environment needs no secrets.
 
 After the first tagged release succeeds, go to the package settings on npm. Require two-factor
 authentication and disallow tokens for publishing. Then mark the bootstrap version as deprecated:

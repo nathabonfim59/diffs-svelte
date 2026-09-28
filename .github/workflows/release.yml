@@ -85,7 +85,7 @@ jobs:
         run: |
           # Prereleases (v1.2.3-rc.1) go to the next tag so they never become latest.
           if [[ "${GITHUB_REF_NAME#v}" == *-* ]]; then tag=next; else tag=latest; fi
-          npm publish "release/diffs-svelte-${GITHUB_REF_NAME#v}.tgz" --access public --tag "$tag" --ignore-scripts
+          npm publish "./release/diffs-svelte-${GITHUB_REF_NAME#v}.tgz" --access public --tag "$tag" --ignore-scripts
 
   github-release:
     needs: npm
