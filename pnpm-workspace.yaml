@@ -1,0 +1,7 @@
+allowBuilds:
+  esbuild: true
+trustPolicyExclude:
+  - chokidar@4.0.3
+  - '@pierre/theme@2.0.0'
+minimumReleaseAgeExclude:
+  - '@pierre/diffs'
