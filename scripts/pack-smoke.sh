@@ -48,11 +48,16 @@ EOF
 cat > src/App.svelte <<'EOF'
 <script lang="ts">
   import {
+    CodeView,
+    EditProvider,
     File,
     FileDiff,
     MultiFileDiff,
     PatchDiff,
+    UnresolvedFile,
+    Virtualizer,
     WorkerPoolProvider,
+    type CodeViewItem,
     type DiffLineAnnotation,
     type FileDiffMetadata
   } from 'diffs-svelte';
@@ -64,6 +69,8 @@ cat > src/App.svelte <<'EOF'
   const notes: DiffLineAnnotation<{ body: string }>[] = [
     { side: 'additions', lineNumber: 1, metadata: { body: 'ok' } }
   ];
+  const items: CodeViewItem<undefined>[] = [{ id: 'a', type: 'diff', fileDiff }];
+  let viewer = $state<CodeView>();
 </script>
 
 <WorkerPoolProvider poolOptions={{ workerFactory: () => new Worker('w.js') }} highlighterOptions={{}}>
@@ -72,7 +79,21 @@ cat > src/App.svelte <<'EOF'
   </MultiFileDiff>
   <PatchDiff patch="" />
   <FileDiff {fileDiff} />
-  <File file={newFile} />
+  <EditProvider>
+    <File file={newFile} edit onEditComplete={(event) => (event.file.contents ? 'accept' : 'reject')} />
+  </EditProvider>
+  <Virtualizer style="height: 200px; overflow: auto">
+    <FileDiff {fileDiff} metrics={undefined} />
+  </Virtualizer>
+  <CodeView bind:this={viewer} {items} style="height: 200px; overflow: auto">
+    {#snippet headerMetadata(item)}<span>{item.id}</span>{/snippet}
+  </CodeView>
+  <button onclick={() => viewer?.scrollTo({ type: 'item', id: 'a' })}>Go</button>
+  <UnresolvedFile file={newFile} onResolve={(file) => console.log(file.contents)}>
+    {#snippet mergeConflictAction(action, resolve)}
+      <button onclick={() => resolve('both')}>{action.conflictIndex}</button>
+    {/snippet}
+  </UnresolvedFile>
 </WorkerPoolProvider>
 EOF
 

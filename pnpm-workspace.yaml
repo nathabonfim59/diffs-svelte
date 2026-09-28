@@ -3,5 +3,5 @@ allowBuilds:
 trustPolicyExclude:
   - chokidar@4.0.3
   - '@pierre/theme@2.0.0'
-minimumReleaseAgeExclude:
-  - '@pierre/diffs'
+# Overrides the global minimumReleaseAge for this repo.
+minimumReleaseAge: 0

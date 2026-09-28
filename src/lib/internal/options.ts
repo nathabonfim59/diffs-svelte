@@ -1,9 +1,11 @@
-const noopRender = () => null;
+export const noopRender = () => null;
 
 interface MergeFlags {
 	controlledSelection: boolean;
 	hasCustomHeader: boolean;
 	hasGutterUtility: boolean;
+	/** Options the component owns, such as edit callbacks. They win over `options`. */
+	owned?: Record<string, unknown>;
 }
 
 /**
@@ -12,12 +14,14 @@ interface MergeFlags {
  */
 export function mergeOptions<T extends object>(
 	options: T | undefined,
-	{ controlledSelection, hasCustomHeader, hasGutterUtility }: MergeFlags
+	{ controlledSelection, hasCustomHeader, hasGutterUtility, owned }: MergeFlags
 ): T | undefined {
-	if (!controlledSelection && !hasCustomHeader && !hasGutterUtility) return options;
+	const hasOwned = owned != null && Object.values(owned).some((value) => value != null);
+	if (!controlledSelection && !hasCustomHeader && !hasGutterUtility && !hasOwned) return options;
 	const base = options as Record<string, unknown> | undefined;
 	return {
 		...options,
+		...owned,
 		controlledSelection,
 		renderCustomHeader: hasCustomHeader ? noopRender : base?.renderCustomHeader,
 		renderGutterUtility: hasGutterUtility ? noopRender : base?.renderGutterUtility,
@@ -38,4 +42,13 @@ export const GUTTER_UTILITY_STYLE =
 export function shadowTemplate(prerenderedHTML: string | undefined): string {
 	if (typeof window !== 'undefined' || prerenderedHTML == null) return '';
 	return `<template shadowrootmode="open">${prerenderedHTML}</template>`;
+}
+
+/** Same rule as the core: compare by `cacheKey` when either side has one, else by content. */
+export function areFileTargetsEqual(
+	a: { name: string; contents: string; lang?: string; cacheKey?: string } | null | undefined,
+	b: { name: string; contents: string; lang?: string; cacheKey?: string } | null | undefined
+): boolean {
+	if (a?.cacheKey != null || b?.cacheKey != null) return a?.cacheKey === b?.cacheKey;
+	return a?.contents === b?.contents && a?.name === b?.name && a?.lang === b?.lang;
 }

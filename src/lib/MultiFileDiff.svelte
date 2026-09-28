@@ -1,4 +1,4 @@
-<script lang="ts" generics="LAnnotation = undefined">
+<script lang="ts" generics="LAnnotation = undefined, Caret = undefined">
 	import { parseDiffFromFile } from '@pierre/diffs';
 	import FileDiff from './FileDiff.svelte';
 	import type { MultiFileDiffProps } from './types.js';
@@ -9,7 +9,7 @@
 		options,
 		instance = $bindable(),
 		...rest
-	}: MultiFileDiffProps<LAnnotation> = $props();
+	}: MultiFileDiffProps<LAnnotation, Caret> = $props();
 
 	const fileDiff = $derived(parseDiffFromFile(oldFile, newFile, options?.parseDiffOptions));
 </script>

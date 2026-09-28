@@ -382,6 +382,98 @@ Full reference for LLMs: ${SITE_URL}/llms-full.txt
 `
 	),
 
+	editMode: svelte(
+		'Editor.svelte',
+		`<script lang="ts">
+  import { EditProvider, File, type FileContents } from '${PKG}';
+
+  let file = $state<FileContents>({ name: 'notes.ts', contents: 'const a = 1;\\n' });
+  let editing = $state(false);
+</script>
+
+<button onclick={() => (editing = !editing)}>{editing ? 'Save' : 'Edit'}</button>
+
+<EditProvider>
+  <File
+    {file}
+    edit={editing}
+    onEditComplete={(event) => {
+      file = event.file;
+      return 'accept'; // or 'reject' to throw the edit away
+    }}
+  />
+</EditProvider>
+`
+	),
+
+	virtualizer: svelte(
+		'Review.svelte',
+		`<script lang="ts">
+  import { FileDiff, Virtualizer } from '${PKG}';
+  import { parsePatchFiles } from '@pierre/diffs';
+
+  let { patch }: { patch: string } = $props();
+  const files = $derived(parsePatchFiles(patch).flatMap((p) => p.files));
+</script>
+
+<!-- The scroll container needs a height and overflow -->
+<Virtualizer style="height: 80vh; overflow: auto">
+  {#each files as fileDiff (fileDiff.name)}
+    <FileDiff {fileDiff} />
+  {/each}
+</Virtualizer>
+`
+	),
+
+	codeView: svelte(
+		'ChangedFiles.svelte',
+		`<script lang="ts">
+  import { CodeView, type CodeViewItem } from '${PKG}';
+  import { parsePatchFiles } from '@pierre/diffs';
+
+  let { patch }: { patch: string } = $props();
+
+  const items: CodeViewItem<undefined>[] = $derived(
+    parsePatchFiles(patch)
+      .flatMap((p) => p.files)
+      .map((fileDiff) => ({ id: fileDiff.name, type: 'diff', fileDiff }))
+  );
+
+  let viewer = $state<CodeView>();
+</script>
+
+<button onclick={() => viewer?.scrollTo({ type: 'item', id: 'src/app.ts' })}>
+  Jump to app.ts
+</button>
+
+<CodeView bind:this={viewer} {items} options={{ stickyHeaders: true }} style="height: 80vh; overflow: auto">
+  {#snippet headerMetadata(item)}
+    <button onclick={() => markViewed(item.id)}>Viewed</button>
+  {/snippet}
+</CodeView>
+`
+	),
+
+	mergeConflicts: svelte(
+		'Conflict.svelte',
+		`<script lang="ts">
+  import { UnresolvedFile, type FileContents } from '${PKG}';
+
+  let { file }: { file: FileContents } = $props();
+  let result = $state<FileContents>();
+</script>
+
+<UnresolvedFile {file} onResolve={(resolved) => (result = resolved)}>
+  <!-- Optional: replaces the built-in buttons -->
+  {#snippet mergeConflictAction(action, resolve)}
+    <button onclick={() => resolve('current')}>Keep ours</button>
+    <button onclick={() => resolve('incoming')}>Keep theirs</button>
+    <button onclick={() => resolve('both')}>Keep both</button>
+  {/snippet}
+</UnresolvedFile>
+`
+	),
+
 	ssrServer: {
 		name: '+page.server.ts',
 		contents: `import { preloadMultiFileDiff } from '@pierre/diffs/ssr';
@@ -441,6 +533,27 @@ interface LineAnnotation<T> {
 
 // A trailing newline would render as an empty last line in the code blocks.
 for (const sample of Object.values(samples)) sample.contents = sample.contents.trimEnd();
+
+export const conflictFile: FileContents = {
+	name: 'config.ts',
+	contents: `export const config = {
+<<<<<<< HEAD
+  port: 3000,
+  host: 'localhost',
+=======
+  port: 8080,
+  host: '0.0.0.0',
+>>>>>>> feature/deploy
+  logLevel: 'info',
+  retries: 3,
+<<<<<<< HEAD
+  timeout: 5_000
+=======
+  timeout: 30_000
+>>>>>>> feature/deploy
+};
+`
+};
 
 export type SampleKey = keyof typeof samples;
 

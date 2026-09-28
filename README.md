@@ -22,12 +22,16 @@ pnpm add diffs-svelte @pierre/diffs
 <MultiFileDiff {oldFile} {newFile} options={{ theme: { dark: 'pierre-dark', light: 'pierre-light' } }} />
 ```
 
-The package has `MultiFileDiff`, `PatchDiff`, `FileDiff`, `File`, and `WorkerPoolProvider`. The
-React render props (`renderAnnotation`, `renderHeaderMetadata`, ...) are snippets here
-(`annotation`, `headerMetadata`, ...). The docs cover props, snippets, options, server rendering,
-and the worker pool.
+The package has `MultiFileDiff`, `PatchDiff`, `FileDiff`, and `File`, plus:
 
-Edit mode, `Virtualizer`, `CodeView`, and `UnresolvedFile` have no components yet.
+- `EditProvider` for edit mode (`edit` on any component)
+- `Virtualizer` and `CodeView` for long lists of files
+- `UnresolvedFile` for resolving merge conflicts
+- `WorkerPoolProvider` to highlight in Web Workers
+
+The React render props (`renderAnnotation`, `renderHeaderMetadata`, ...) are snippets here
+(`annotation`, `headerMetadata`, ...). The docs cover props, snippets, options, server rendering,
+and each of the components above.
 
 ## Agent skill
 

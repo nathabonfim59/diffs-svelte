@@ -3,6 +3,8 @@
 	import { resolve } from '$app/paths';
 	import { MultiFileDiff } from '$lib/index.js';
 	import CodeBlock from '../docs/CodeBlock.svelte';
+	import ConflictDemo from '../docs/demos/ConflictDemo.svelte';
+	import EditDemo from '../docs/demos/EditDemo.svelte';
 	import ComponentsDemo from '../docs/demos/ComponentsDemo.svelte';
 	import HeaderDemo from '../docs/demos/HeaderDemo.svelte';
 	import Playground from '../docs/demos/Playground.svelte';
@@ -35,6 +37,15 @@
 			]
 		},
 		{
+			title: 'Advanced',
+			items: [
+				['edit', 'Edit mode'],
+				['virtualizer', 'Virtualizer'],
+				['code-view', 'CodeView'],
+				['merge-conflicts', 'Merge conflicts']
+			]
+		},
+		{
 			title: 'Configuration',
 			items: [
 				['options', 'Options'],
@@ -47,8 +58,7 @@
 			title: 'Reference',
 			items: [
 				['core-types', 'Core types'],
-				['from-react', 'Coming from React'],
-				['status', 'Not bound yet']
+				['from-react', 'Coming from React']
 			]
 		}
 	] as const;
@@ -233,7 +243,7 @@
 		<section id="components">
 			<h2>Components</h2>
 			<p>
-				The three diff components differ only in their input. All four render into a
+				The three diff components differ only in their input. All of them render into a
 				<code>&lt;diffs-container&gt;</code> element with a shadow root, so page CSS does not reach the
 				code.
 			</p>
@@ -412,6 +422,86 @@
 			<CodeBlock file={samples.selection} html={data.html.selection} />
 		</section>
 
+		<section id="edit">
+			<h2>Edit mode</h2>
+			<p>
+				<code>File</code> and the diff components become editable when you set <code>edit</code>. They
+				need an <code>EditProvider</code> somewhere above them, which creates the editor. Only the
+				components that use editing load the editor code.
+			</p>
+			<EditDemo />
+			<CodeBlock file={samples.editMode} html={data.html.editMode} />
+			<p>
+				<code>onEditChange</code> fires on every change. Don't write its value back into
+				<code>file</code> while editing. When <code>edit</code> turns off, <code>onEditComplete</code>
+				receives the edited file. Return <code>'accept'</code> to keep it or <code>'reject'</code> to
+				go back to the <code>file</code> prop. In a diff you edit the new side.
+			</p>
+			<p>
+				<code>editorOptions</code> configures the editor, for example its undo history size or
+				keymap. Pass <code>editStateKey</code> to keep a draft and its undo history when the component
+				remounts. <code>EditProvider</code> takes an optional <code>createEditor</code> function to
+				share options across components.
+			</p>
+		</section>
+
+		<section id="virtualizer">
+			<h2>Virtualizer</h2>
+			<p>
+				A long list of diffs is slow when every file renders. Wrap the list in
+				<code>Virtualizer</code> and the components inside render only the lines near the viewport.
+				Nothing else changes: the components, props, and snippets work as before.
+			</p>
+			<CodeBlock file={samples.virtualizer} html={data.html.virtualizer} />
+			<p>
+				<code>Virtualizer</code> renders the scroll container, so give it a height and
+				<code>overflow: auto</code>. <code>contentClass</code> and <code>contentStyle</code> style the
+				element inside it. The <code>metrics</code> prop on each component gives size hints for more
+				accurate scroll heights.
+			</p>
+		</section>
+
+		<section id="code-view">
+			<h2>CodeView</h2>
+			<p>
+				<code>CodeView</code> is one virtualized scroll view for many files and diffs, like the
+				changed-files tab of a pull request. It lays out every item itself, so it handles thousands of
+				files and supports sticky headers, collapsing, and scrolling to a line.
+			</p>
+			<CodeBlock file={samples.codeView} html={data.html.codeView} />
+			<p>
+				Each item has an <code>id</code> and either <code>type: 'diff'</code> with a
+				<code>fileDiff</code> or <code>type: 'file'</code> with a <code>file</code>. CodeView
+				re-renders an item when its object or <code>version</code> changes. Use
+				<code>$state.raw</code> for items, or plain arrays as above.
+			</p>
+			<p>
+				The snippets are the same as the other components, plus <code>codeViewHeader</code> and
+				<code>codeViewFooter</code> for content above and below the list. Each item snippet also
+				receives the item. With <code>bind:this</code> you can call <code>scrollTo</code>,
+				<code>getEditor</code>, and the selection methods. To manage items with
+				<code>addItems</code>, <code>updateItem</code>, and <code>removeItem</code> instead of a
+				prop, pass <code>initialItems</code> in place of <code>items</code>. Items with
+				<code>edit: true</code> are editable when an <code>EditProvider</code> is above.
+			</p>
+		</section>
+
+		<section id="merge-conflicts">
+			<h2>Merge conflicts</h2>
+			<p>
+				<code>UnresolvedFile</code> takes a file that still has Git conflict markers and shows each
+				conflict as a diff between the two sides, with buttons to resolve it.
+			</p>
+			<ConflictDemo />
+			<CodeBlock file={samples.mergeConflicts} html={data.html.mergeConflicts} />
+			<p>
+				<code>onResolve</code> receives the whole file after each resolution. Without the
+				<code>mergeConflictAction</code> snippet you get the built-in buttons. Set
+				<code>options.mergeConflictActionsType</code> to <code>'none'</code> to hide them. Pass a new
+				<code>file</code> to start over.
+			</p>
+		</section>
+
 		<section id="options">
 			<h2>Options</h2>
 			<p>
@@ -522,6 +612,26 @@
 							<td><code>WorkerPoolProvider</code></td>
 						</tr>
 						<tr>
+							<td><code>EditContext</code> / <code>EditProvider</code></td>
+							<td><code>EditProvider</code>, with <code>createEditor</code> optional</td>
+						</tr>
+						<tr>
+							<td><code>CodeView</code> <code>ref</code> handle</td>
+							<td><code>bind:this</code>, with the same methods</td>
+						</tr>
+						<tr>
+							<td><code>renderCodeViewHeader</code>, <code>renderCodeViewFooter</code></td>
+							<td><code>codeViewHeader</code>, <code>codeViewFooter</code></td>
+						</tr>
+						<tr>
+							<td><code>UnresolvedFile</code> <code>renderMergeConflictUtility</code></td>
+							<td><code>mergeConflictAction</code> snippet, called with a <code>resolve</code> function</td>
+						</tr>
+						<tr>
+							<td><code>options.onMergeConflictResolve</code></td>
+							<td><code>onResolve</code> (the option also works)</td>
+						</tr>
+						<tr>
 							<td><code>useMemo</code> around options</td>
 							<td>Not needed. Options are compared by value.</td>
 						</tr>
@@ -530,21 +640,6 @@
 			</div>
 		</section>
 
-		<section id="status">
-			<h2>Not bound yet</h2>
-			<p>These parts of <code>@pierre/diffs</code> have no Svelte component yet:</p>
-			<ul>
-				<li>Edit mode (<code>edit</code>, <code>EditContext</code>)</li>
-				<li><code>Virtualizer</code> and the virtualized renderers</li>
-				<li><code>CodeView</code></li>
-				<li><code>UnresolvedFile</code> for merge conflicts</li>
-			</ul>
-			<p>
-				You can still use their vanilla classes with an element from <code>bind:this</code>.
-				<a href="{REPO_URL}/issues" target="_blank" rel="noreferrer">Open an issue</a> if you need one of
-				them.
-			</p>
-		</section>
 
 		<footer>
 			Built on <a href="https://diffs.com" target="_blank" rel="noreferrer">@pierre/diffs</a> by The

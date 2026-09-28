@@ -1,8 +1,21 @@
-<script lang="ts" generics="LAnnotation = undefined">
+<script lang="ts" generics="LAnnotation = undefined, Caret = undefined">
 	import { untrack } from 'svelte';
-	import { File as FileRenderer, areOptionsEqual, getLineAnnotationName } from '@pierre/diffs';
-	import { getWorkerPool } from './context.js';
-	import { GUTTER_UTILITY_STYLE, mergeOptions, shadowTemplate } from './internal/options.js';
+	import {
+		File as FileRenderer,
+		VirtualizedFile,
+		areOptionsEqual,
+		getLineAnnotationName,
+		type FileContents,
+		type FileEditCompleteEvent,
+		type LineAnnotation
+	} from '@pierre/diffs';
+	import { getEditorFactory, getVirtualizer, getWorkerPool } from './context.js';
+	import {
+		GUTTER_UTILITY_STYLE,
+		areFileTargetsEqual,
+		mergeOptions,
+		shadowTemplate
+	} from './internal/options.js';
 	import type { FileProps } from './types.js';
 
 	let {
@@ -12,6 +25,12 @@
 		selectedLines,
 		prerenderedHTML,
 		disableWorkerPool = false,
+		metrics,
+		edit = false,
+		editorOptions,
+		editStateKey,
+		onEditChange,
+		onEditComplete,
 		class: className,
 		style,
 		annotation,
@@ -21,32 +40,95 @@
 		headerMetadata,
 		gutterUtility,
 		instance = $bindable()
-	}: FileProps<LAnnotation> = $props();
+	}: FileProps<LAnnotation, Caret> = $props();
 
 	const workerPool = getWorkerPool();
-	let renderer = $state.raw<FileRenderer<LAnnotation, undefined>>();
+	const virtualizer = getVirtualizer();
+	const createEditor = getEditorFactory<LAnnotation, Caret>();
+	let renderer = $state.raw<FileRenderer<LAnnotation, Caret>>();
+	let disposeEditor: (() => void) | undefined;
+
+	// After an accepted edit, keep showing the edited file until the parent
+	// passes something other than the value it had before the edit.
+	let accepted:
+		| {
+				file: { installed: FileContents; stale: FileContents } | null;
+				annotations: {
+					installed: LineAnnotation<LAnnotation>[] | undefined;
+					stale: LineAnnotation<LAnnotation>[];
+				} | null;
+		  }
+		| undefined;
+
+	// Stable wrappers, so a new callback prop doesn't count as an options change.
+	const emitEditChange: typeof onEditChange = (event) => onEditChange?.(event);
+
+	function handleEditComplete(event: FileEditCompleteEvent<LAnnotation, Caret>) {
+		const decision = onEditComplete?.(event) ?? 'reject';
+		if (decision === 'accept') {
+			accepted = {
+				file: { installed: event.file, stale: event.originalFile },
+				annotations: { installed: event.lineAnnotations, stale: event.originalLineAnnotations }
+			};
+		}
+		return decision;
+	}
+
+	function resolveAccepted() {
+		if (accepted == null) return { file, lineAnnotations };
+		let resolvedFile = file;
+		if (accepted.file != null) {
+			if (areFileTargetsEqual(file, accepted.file.stale)) resolvedFile = accepted.file.installed;
+			else accepted.file = null;
+		}
+		let resolvedAnnotations = lineAnnotations;
+		if (accepted.annotations != null) {
+			if (lineAnnotations === accepted.annotations.stale) {
+				resolvedAnnotations = accepted.annotations.installed;
+			} else accepted.annotations = null;
+		}
+		if (accepted.file == null && accepted.annotations == null) accepted = undefined;
+		return { file: resolvedFile, lineAnnotations: resolvedAnnotations };
+	}
 
 	const mergedOptions = $derived(
 		mergeOptions(options, {
 			controlledSelection: selectedLines !== undefined,
 			hasCustomHeader: header != null,
-			hasGutterUtility: gutterUtility != null
+			hasGutterUtility: gutterUtility != null,
+			owned: {
+				onEditChange: onEditChange != null ? emitEditChange : undefined,
+				onEditComplete: onEditComplete != null ? handleEditComplete : undefined
+			}
 		})
 	);
 
+	function attachEditor(r: FileRenderer<LAnnotation, Caret>) {
+		if (createEditor == null) throw new Error('File: edit needs an <EditProvider> above it');
+		const editor = createEditor('file', editorOptions ?? {}, editStateKey);
+		try {
+			disposeEditor = editor.edit(r);
+		} catch (error) {
+			editor.cleanUp();
+			throw error;
+		}
+	}
+
 	function mount(fileContainer: HTMLElement) {
 		const r = untrack(() => {
-			const r = new FileRenderer<LAnnotation, undefined>(
-				mergedOptions,
-				disableWorkerPool ? undefined : workerPool,
-				true
-			);
+			const pool = disableWorkerPool ? undefined : workerPool;
+			const r =
+				virtualizer != null
+					? new VirtualizedFile<LAnnotation, Caret>(mergedOptions, virtualizer, metrics, pool, true)
+					: new FileRenderer<LAnnotation, Caret>(mergedOptions, pool, true);
+			if (edit) attachEditor(r);
 			r.hydrate({ file, fileContainer, lineAnnotations, prerenderedHTML });
 			return r;
 		});
 		renderer = r;
 		return () => {
 			r.cleanUp();
+			disposeEditor = undefined;
 			renderer = undefined;
 		};
 	}
@@ -57,13 +139,26 @@
 
 	$effect(() => {
 		if (renderer == null) return;
-		const forceRender = mergedOptions !== undefined && !areOptionsEqual(renderer.options, mergedOptions);
+		const forceRender =
+			mergedOptions !== undefined && !areOptionsEqual(renderer.options, mergedOptions);
 		renderer.setOptions(mergedOptions);
-		renderer.render({ file, lineAnnotations, forceRender });
+		if (!edit && disposeEditor != null) {
+			const dispose = disposeEditor;
+			disposeEditor = undefined;
+			untrack(dispose);
+		}
+		const resolved = resolveAccepted();
+		renderer.render({ ...resolved, forceRender });
 		if (selectedLines !== undefined) renderer.setSelectedLines(selectedLines);
+		if (edit && disposeEditor == null) {
+			const r = renderer;
+			untrack(() => attachEditor(r));
+		}
 	});
 
 	const getHoveredLine = () => renderer?.getHoveredLine();
+	const slotName = (item: LineAnnotation<LAnnotation>) =>
+		renderer?.getAnnotationSlotName(item) ?? getLineAnnotationName(item);
 </script>
 
 <diffs-container {@attach mount} class={className} {style}>
@@ -83,7 +178,7 @@
 	{/if}
 	{#if annotation && lineAnnotations}
 		{#each lineAnnotations as item}
-			<div slot={getLineAnnotationName(item)}>{@render annotation(item)}</div>
+			<div slot={slotName(item)}>{@render annotation(item)}</div>
 		{/each}
 	{/if}
 	{#if gutterUtility}

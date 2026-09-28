@@ -24,13 +24,16 @@ export const sections = [
 	['annotations', 'Annotations and gutter'],
 	['header', 'Header'],
 	['selection', 'Line selection'],
+	['edit', 'Edit mode'],
+	['virtualizer', 'Virtualizer'],
+	['code-view', 'CodeView'],
+	['merge-conflicts', 'Merge conflicts'],
 	['options', 'Options'],
 	['instance', 'Renderer instance'],
 	['worker-pool', 'Worker pool'],
 	['ssr', 'Server rendering'],
 	['core-types', 'Core types'],
-	['from-react', 'Coming from React'],
-	['status', 'Not bound yet']
+	['from-react', 'Coming from React']
 ] as const;
 
 export function llmsIndex(): string {
@@ -39,7 +42,8 @@ export function llmsIndex(): string {
 
 > Svelte 5 components for @pierre/diffs. MultiFileDiff, PatchDiff, FileDiff, and File render
 > syntax-highlighted diffs and code files, with snippets for annotations, gutter controls, and
-> headers.
+> headers. EditProvider adds edit mode, Virtualizer and CodeView handle long lists, and
+> UnresolvedFile resolves merge conflicts.
 
 ## Docs
 

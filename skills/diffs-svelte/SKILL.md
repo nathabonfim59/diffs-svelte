@@ -5,7 +5,8 @@ description:
   syntax-highlighted files with diffs-svelte, the Svelte components for
   @pierre/diffs. Covers MultiFileDiff, PatchDiff, FileDiff, File, snippets for
   annotations, gutter controls, and headers, line selection, options, worker
-  pools, and server rendering.
+  pools, server rendering, edit mode, Virtualizer, CodeView, and
+  UnresolvedFile for merge conflicts.
 ---
 
 # diffs-svelte
@@ -33,6 +34,11 @@ later.
 | `PatchDiff`     | `patch` (string, exactly one file)     | You have unified diff text for one file.           |
 | `FileDiff`      | `fileDiff` (`FileDiffMetadata`)        | You parsed the diff yourself, or a patch has many files. |
 | `File`          | `file` (`FileContents`)                | You want highlighted code without a diff.          |
+| `CodeView`      | `items` (`CodeViewItem[]`)             | You show many files in one virtualized scroll view. |
+| `UnresolvedFile`| `file` with conflict markers           | You let users resolve a merge conflict.            |
+
+Wrap components in `EditProvider` to edit them, or in `Virtualizer` to render
+only what is on screen.
 
 ```svelte
 <script lang="ts">
@@ -75,9 +81,8 @@ later.
   `--diffs-font-family`, `--diffs-font-size`, `--diffs-line-height`, or
   `--diffs-header-font-family` on a parent, or use `options.unsafeCSS`. Snippet
   output stays in the light DOM, so normal component styles apply to it.
-- Edit mode, `Virtualizer`, `CodeView`, and `UnresolvedFile` have no Svelte
-  component yet. Use their vanilla classes from `@pierre/diffs` with an element
-  from `bind:this`.
+- `Virtualizer` and `CodeView` are scroll containers. Give them a height and
+  `overflow: auto`.
 
 ## References
 
@@ -86,6 +91,7 @@ later.
 | Props, snippets, and types for every component         | [Components](references/components.md)           |
 | Annotations, gutter, headers, selection, instance      | [Interaction recipes](references/recipes.md)     |
 | Themes, options, worker pool, SvelteKit server render  | [Setup recipes](references/setup.md)             |
+| Edit mode, Virtualizer, CodeView, merge conflicts      | [Advanced components](references/advanced.md)    |
 
 For every option `@pierre/diffs` accepts, install the upstream skill:
 
