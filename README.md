@@ -27,6 +27,17 @@ and the worker pool.
 
 Edit mode, `Virtualizer`, `CodeView`, and `UnresolvedFile` have no components yet.
 
+## Agent skill
+
+`skills/diffs-svelte` is an agent skill with the component API and recipes. Install it with the
+[Skills CLI](https://skills.sh/docs/cli):
+
+```sh
+npx skills add nathabonfim59/diffs-svelte --skill diffs-svelte
+```
+
+The docs site also serves the skill as plain text at `/llms.txt` and `/llms-full.txt`.
+
 ## Development
 
 The library lives in `src/lib` and is the only part published to npm. `src/routes` and `src/docs`

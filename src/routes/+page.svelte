@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 	import { MultiFileDiff } from '$lib/index.js';
 	import CodeBlock from '../docs/CodeBlock.svelte';
 	import ComponentsDemo from '../docs/demos/ComponentsDemo.svelte';
@@ -18,6 +19,7 @@
 			items: [
 				['overview', 'Overview'],
 				['installation', 'Installation'],
+				['agents', 'Build with agents'],
 				['quick-start', 'Quick start']
 			]
 		},
@@ -180,6 +182,39 @@
 				copy. You also import from it directly for parsing helpers, types, the worker, and server
 				rendering.
 			</p>
+		</section>
+
+		<section id="agents">
+			<h2>Build with agents</h2>
+			<p>
+				An agent skill gives coding agents the component API and the recipes from this page. Any
+				agent the Skills CLI supports can load it, including Claude Code, Cursor, and Codex.
+			</p>
+
+			<h3 id="agent-skill">Agent skill</h3>
+			<p>Install it with the Skills CLI:</p>
+			<CodeBlock file={samples.skillInstall} html={data.html.skillInstall} />
+			<p>
+				The skill covers choosing a component, props, snippets, options, the worker pool, and server
+				rendering. For the full list of <code>@pierre/diffs</code> options, also install the upstream
+				skill with <code>npx skills add pierrecomputer/pierre --skill diffs</code>.
+			</p>
+
+			<h3 id="agent-prompt">Prompt an agent</h3>
+			<p>
+				You can also paste this prompt into your agent. It installs the skill and points the agent to
+				the plain-text docs.
+			</p>
+			<CodeBlock file={samples.agentPrompt} html={data.html.agentPrompt} />
+
+			<h3 id="plain-text">Plain-text docs</h3>
+			<ul>
+				<li><a href={resolve('/llms.txt')}>llms.txt</a> lists the sections of this page.</li>
+				<li>
+					<a href={resolve('/llms-full.txt')}>llms-full.txt</a> has the skill and all of its references
+					in one Markdown file.
+				</li>
+			</ul>
 		</section>
 
 		<section id="quick-start">

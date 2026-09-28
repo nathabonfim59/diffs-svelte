@@ -2,6 +2,8 @@ import type { FileContents } from '@pierre/diffs';
 
 export const PKG = 'diffs-svelte';
 export const REPO_URL = 'https://github.com/nathabonfim59/diffs-svelte';
+export const SITE_URL = 'https://nathabonfim59.github.io/diffs-svelte';
+export const SKILL_INSTALL = 'npx skills add nathabonfim59/diffs-svelte --skill diffs-svelte';
 
 // ---------------------------------------------------------------------------
 // Data rendered by the live demos
@@ -169,6 +171,26 @@ export const samples = {
 		name: 'terminal',
 		lang: 'bash',
 		contents: `pnpm add ${PKG} @pierre/diffs\n`
+	},
+
+	skillInstall: {
+		name: 'terminal',
+		lang: 'bash',
+		contents: `${SKILL_INSTALL}\n`
+	},
+
+	agentPrompt: {
+		name: 'prompt.md',
+		contents: `Set up diffs-svelte in this Svelte 5 project.
+Install its agent skill first so you have the full API reference:
+
+${SKILL_INSTALL}
+
+Then follow that skill to add diffs-svelte and @pierre/diffs.
+
+Docs: ${SITE_URL}/
+Full reference for LLMs: ${SITE_URL}/llms-full.txt
+`
 	},
 
 	quickStart: svelte(
