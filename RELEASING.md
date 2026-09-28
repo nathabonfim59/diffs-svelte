@@ -37,10 +37,12 @@ npm view diffs-svelte                     # 404 means the name is still free
 pnpm install --frozen-lockfile && pnpm build
 TMP=$(mktemp -d) && cp -R package.json README.md LICENSE dist "$TMP"
 npm --prefix "$TMP" version 0.0.0-bootstrap.0 --no-git-tag-version
-NPM_CONFIG_PROVENANCE=false npm publish "$TMP" --access public --tag bootstrap --ignore-scripts
+node -e "const f='$TMP/package.json',p=require(f);delete p.publishConfig.provenance;require('fs').writeFileSync(f,JSON.stringify(p,null,2))"
+npm publish "$TMP" --access public --tag bootstrap --ignore-scripts
 ```
 
-Provenance is off for this one publish because npm only generates it in supported CI.
+The copy drops `publishConfig.provenance` because npm only generates provenance in supported CI,
+and that field overrides `NPM_CONFIG_PROVENANCE`.
 
 Next, on npmjs.com, open the settings for `diffs-svelte` and add a GitHub Actions trusted
 publisher with these values. They are case-sensitive.
