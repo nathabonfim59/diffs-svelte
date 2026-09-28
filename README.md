@@ -5,6 +5,8 @@ Svelte 5 components for [`@pierre/diffs`](https://diffs.com). The components dri
 
 Docs and live examples: https://nathabonfim59.github.io/diffs-svelte/
 
+<img src=".github/screenshot.png" alt="A split diff of Counter.svelte migrating from Svelte 4 to Svelte 5, with a review comment under the new props line" width="800">
+
 ```sh
 pnpm add diffs-svelte @pierre/diffs
 ```
